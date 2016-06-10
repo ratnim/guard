@@ -1,13 +1,13 @@
 import sys
 from Crypto.Cipher import AES
-from utils import expendString
+from utils import extend_string_to_base
 
-password = expendString(sys.argv[1], 16)
-iv = expendString(sys.argv[2], 16)
+password = extend_string_to_base(sys.argv[1], 16)
+iv = extend_string_to_base(sys.argv[2], 16)
 
 source_file = open(sys.argv[3], 'r')
 
-input = expendString(source_file.read(), 16)
+input = extend_string_to_base(source_file.read(), 16)
 
 print( input )
 
