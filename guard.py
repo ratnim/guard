@@ -1,14 +1,6 @@
 import sys
 from Crypto.Cipher import AES
-
-def expendString( string, base ):
-	"Expends until it is a multiple of base"
-	fit = len( string ) % base  
-	if (fit == 0):
-		return string
-	for i in range(base - fit):
-		string += ' '
-	return string
+from utils import expendString
 
 password = expendString(sys.argv[1], 16)
 iv = expendString(sys.argv[2], 16)
