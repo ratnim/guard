@@ -1,24 +1,21 @@
-import sys
 from Crypto.Cipher import AES
-from utils import extend_string_to_base
+from utils import extent_string_to_base
 
 class Encoder:
     """"Simple Proxy for Crypto.Cipher"""
 
     @staticmethod
-    def encode(self, password, iv, content):
-        password = extend_string_to_base(password, 16)
-        iv = extend_string_to_base(iv, 16)
-
-        content = extend_string_to_base(content, 16)
-
-        obj = AES.new(password, AES.MODE_CBC, iv)
-        return obj.encrypt(input)
+    def encode(password, iv, content):
+        filled_password = extent_string_to_base(password, 16)
+        filled_iv = extent_string_to_base(iv, 16)
+        filled_content = extent_string_to_base(content, 16)
+        obj = AES.new(filled_password, AES.MODE_CBC, filled_iv)
+        return obj.encrypt(filled_content)
 
     @staticmethod
-    def decode(self, password, iv, content):
-        password = extend_string_to_base(password, 16)
-        iv = extend_string_to_base(iv, 16)
+    def decode(password, iv, content):
+        filled_password = extent_string_to_base(password, 16)
+        filled_iv = extent_string_to_base(iv, 16)
 
-        obj = AES.new(password, AES.MODE_CBC, iv)
+        obj = AES.new(filled_password, AES.MODE_CBC, filled_iv)
         return obj.decrypt(content)
