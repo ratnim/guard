@@ -17,5 +17,3 @@ print(cipher)
 
 file = open(sys.argv[3].split('.')[0], 'wb')
 file.write(cipher)
-
-
