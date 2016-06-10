@@ -14,17 +14,22 @@ class Guard:
             string += (entry + ':' + entries[entry] + '\n\r')
         return string
 
-    def save(self, entries):
+    def save(self, entries, passphrase):
         string = self.format(entries)
         filename = entries["Entry-Name"]
         if filename == "":
             print("Entry-Name need to be set")
             return
-        cipher = Encoder.encode("masterpassword", "Salt", string)
+        if passphrase == "":
+            print("Passphrase need to be set")
+            return
+        cipher = Encoder.encode(passphrase, self.salt(), string)
         write(cipher, filename)
 
     def open_gui(self):
         widget = MainWidget(self.save)
         widget.open()
 
+    def salt(self):
+        return 'thisIsMadness'
 Guard()
