@@ -3,10 +3,11 @@ import tkinter as tk
 class MainWidget:
     """"Main GUI element"""
 
-    def __init__(self, save):
+    def __init__(self, save, read):
         self.tk_master = tk.Tk()
         self.tk_master.title("Guard")
         self.save_callback = save
+        self.read_callback = read
         self.entries = {}
         self.row = 0
         self.passphrase = None
@@ -24,7 +25,7 @@ class MainWidget:
 
         tk.Button(self.tk_master, text='Close', width=25, command=self.tk_master.destroy).grid(row=row, column=0, sticky=tk.W, pady=4)
         tk.Button(self.tk_master, text='Save', width=25, command=self.save_pressed).grid(row=row, column=1, sticky=tk.W, pady=4)
-
+        tk.Button(self.tk_master, text='Open', width=25, command=self.open_pressed).grid(row=row, column=2, sticky=tk.W, pady=4)
         tk.mainloop()
 
     def save_pressed(self):
@@ -46,3 +47,13 @@ class MainWidget:
     def next_row(self):
         self.row += 1
         return self.row
+
+    def open_pressed(self):
+        filename = self.entries["Entry-Name"].get()
+        passphrase = self.passphrase.get()
+        widget = tk.Tk()
+        widget.title(filename)
+        text = tk.Text(widget ,height=len(self.entries),width=30)
+        text.grid(row=0)
+        content = self.read_callback(passphrase, filename)
+        text.insert(tk.END, content)

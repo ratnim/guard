@@ -26,8 +26,13 @@ class Guard:
         cipher = Encoder.encode(passphrase, self.salt(), string)
         write(cipher, filename)
 
+    def read(self, passphrase, filename):
+        cipher = read(filename)
+        print(cipher)
+        return Encoder.decode(passphrase, self.salt(), cipher)
+
     def open_gui(self):
-        widget = MainWidget(self.save)
+        widget = MainWidget(self.save, self.read)
         widget.open()
 
     def salt(self):
