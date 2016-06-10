@@ -3,12 +3,9 @@
 
 # Extends string until it is a multiple of base
 def extend_string_to_base(string, base):
-    fit = len(string) % base
-    if fit == 0:
-        return string
-    for i in range(base - fit):
+    while len(string) % base:
         string += ' '
-        return string
+    return string
 
 
 def write(content, filename):
