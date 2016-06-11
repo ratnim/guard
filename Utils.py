@@ -10,7 +10,8 @@ def extent_string_to_base(string, base):
 
 def write(content,filename, path=""):
     filePath = os.path.sep.join([ path, filename ])
-    os.makedirs(path)
+    if not os.path.exists(path):
+        os.makedirs(path)
     print("write file " + filePath)
     file = open( filePath, 'wb')
     file.write(content)
