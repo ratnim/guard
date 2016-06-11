@@ -14,6 +14,7 @@ class MainWidget:
         self.passphrase = {}
         self.passphrase_hide = tk.IntVar()
         self.passphrase_entry = None
+        self.log = None
 
     def open(self):
         self.passphrase_entry = self.generate_entry("Passphrase", False)
@@ -34,7 +35,24 @@ class MainWidget:
         tk.Button(self.tk_master, text='Close', width=25, command=self.tk_master.destroy).grid(row=row, column=0, sticky=tk.W, pady=4)
         tk.Button(self.tk_master, text='Save', width=25, command=self.save_pressed).grid(row=row, column=1, sticky=tk.W, pady=4)
         tk.Button(self.tk_master, text='Open', width=25, command=self.open_pressed).grid(row=row, column=2, sticky=tk.W, pady=4)
+
+        self.log = tk.Text(self.tk_master, width=60, height=4)
+        self.log.configure(bg=self.tk_master.cget('bg'))
+        self.log.config(bg="sky blue")
+        self.log.configure(state="disabled")
+        self.log.grid(row=self.next_row(), column=0, rowspan=4, columnspan=3)
+        self.row += 4
+        self.log_message("Guard, Version 1.0")
+
+
         tk.mainloop()
+
+    def log_message(self, message):
+        print(message)
+        self.log.configure(state="normal")
+        self.log.insert(tk.END, message + "\r\n")
+        self.log.configure(state="disabled")
+        self.log.see(tk.END)
 
     def toggle_passphrase(self):
         if self.passphrase_hide.get():

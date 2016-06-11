@@ -5,6 +5,7 @@ from utils import write, read
 
 class Guard:
     data_directory = "data"
+    gui = None
 
     def __init__(self):
         if len(sys.argv) == 1:
@@ -26,16 +27,17 @@ class Guard:
             print("Passphrase need to be set")
             return
         cipher = Encoder.encode(passphrase, self.salt(), string)
-        write(cipher, filename, self.data_directory)
+        write(cipher, filename, self.data_directory, self.gui.log_message)
 
     def read(self, passphrase, filename):
-        cipher = read(filename, self.data_directory)
+        cipher = read(filename, self.data_directory, self.gui.log_message)
         return Encoder.decode(passphrase, self.salt(), cipher)
 
     def open_gui(self):
-        widget = MainWidget(self.save, self.read)
-        widget.open()
+        self.gui = MainWidget(self.save, self.read)
+        self.gui.open()
 
     def salt(self):
         return 'thisIsMadness'
+
 Guard()
