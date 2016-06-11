@@ -4,6 +4,8 @@ from encoder import Encoder
 from utils import write, read
 
 class Guard:
+    data_directory = "data"
+
     def __init__(self):
         if len(sys.argv) == 1:
             self.open_gui();
@@ -24,11 +26,10 @@ class Guard:
             print("Passphrase need to be set")
             return
         cipher = Encoder.encode(passphrase, self.salt(), string)
-        write(cipher, filename)
+        write(cipher, filename, self.data_directory)
 
     def read(self, passphrase, filename):
-        cipher = read(filename)
-        print(cipher)
+        cipher = read(filename, self.data_directory)
         return Encoder.decode(passphrase, self.salt(), cipher)
 
     def open_gui(self):
