@@ -1,5 +1,6 @@
 import tkinter as tk
 
+
 class MainWidget:
     """"Main GUI element"""
 
@@ -10,10 +11,17 @@ class MainWidget:
         self.read_callback = read
         self.entries = {}
         self.row = 0
-        self.passphrase = None
+        self.passphrase = {}
+        self.passphrase_hide = tk.IntVar()
+        self.passphrase_entry = None
 
     def open(self):
-        self.passphrase = self.generate_entry("Passphrase", False)
+        self.passphrase_entry = self.generate_entry("Passphrase", False)
+        tk.Checkbutton(self.tk_master,
+                       text="Hide",
+                       variable=self.passphrase_hide,
+                       command=self.toggle_passphrase).grid(row=self.row, column=2)
+
         self.generate_entry("Entry-Name")
         self.generate_entry("Company")
         self.generate_entry("Url")
@@ -28,12 +36,18 @@ class MainWidget:
         tk.Button(self.tk_master, text='Open', width=25, command=self.open_pressed).grid(row=row, column=2, sticky=tk.W, pady=4)
         tk.mainloop()
 
+    def toggle_passphrase(self):
+        if self.passphrase_hide.get():
+            self.passphrase_entry.config(show="*")
+        else:
+            self.passphrase_entry.config(show="")
+
     def save_pressed(self):
         values = {}
 
         for entry in self.entries:
             values[entry] = self.entries[entry].get()
-        self.save_callback(values, self.passphrase.get())
+        self.save_callback(values, self.passphrase_entry.get())
 
     def generate_entry(self, name, is_content=True):
         row = self.next_row()
@@ -50,7 +64,7 @@ class MainWidget:
 
     def open_pressed(self):
         filename = self.entries["Entry-Name"].get()
-        passphrase = self.passphrase.get()
+        passphrase = self.passphrase_entry.get()
         widget = tk.Tk()
         widget.title(filename)
         text = tk.Text(widget ,height=len(self.entries),width=30)
