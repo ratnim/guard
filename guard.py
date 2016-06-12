@@ -1,7 +1,7 @@
 import sys
 from gui import MainWidget
 from encoder import Encoder
-from utils import write, read
+from utils import write, read, get_file_entries
 
 
 class Guard:
@@ -32,6 +32,9 @@ class Guard:
     def read(self, passphrase, filename):
         cipher = read(filename, self.data_directory, self.gui.log_message)
         return Encoder.decode(passphrase, self.salt(), cipher)
+
+    def get_entries(self):
+        return get_file_entries(self.data_directory)
 
     @staticmethod
     def salt():

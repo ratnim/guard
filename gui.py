@@ -17,12 +17,14 @@ class WorkingWidget:
     def _create_passphrase_entry(self, row):
         self.passphrase_hide = tk.IntVar()
         tk.Label(self.work_frame, text="Passphrase").grid(row=row)
-        self.passphrase_entry = tk.Entry(self.work_frame)
+        self.passphrase_entry = tk.Entry(self.work_frame, show="*")
         self.passphrase_entry.grid(row=row, column=1)
-        tk.Checkbutton(self.work_frame,
+        t = tk.Checkbutton(self.work_frame,
                        text="Hide",
                        variable=self.passphrase_hide,
-                       command=self._toggle_passphrase).grid(row=row, column=2)
+                       command=self._toggle_passphrase)
+        t.grid(row=row, column=2)
+        t.select()
 
     def _toggle_passphrase(self):
         if self.passphrase_hide.get():
@@ -83,14 +85,38 @@ class OpenEntryWidget(WorkingWidget):
         tk.Button(self.button_frame, text='Open', width=25, command=self._open_pressed).pack(
             side=tk.LEFT)
 
-    def _selected_entry(self):
-        return "Test"
+        self._show_entries()
+
+    def _selected_entries(self):
+        entries = []
+        for entry in self.entries:
+            if self.enable[entry].get():
+                entries.append(entry)
+        return entries
+
+    def _show_entries(self):
+        self.entries = self.worker.get_entries()
+        self.enable = {}
+        row = 1;
+        column = 0;
+        max_row = len(self.entries) / 3
+        for entry in self.entries:
+            self.enable[entry] = tk.IntVar()
+            t = tk.Checkbutton(self.work_frame, text=entry, variable=self.enable[entry])
+            t.grid(row=row, column=column)
+            t.deselect()
+            row += 1
+            if max_row + 1 <= row:
+                row = 1
+                column += 1
+
 
     def _open_pressed(self):
-        filename = self._selected_entry()
+        files = self._selected_entries()
         passphrase = self.passphrase_entry.get()
-        content = self.worker.read(passphrase, filename)
-        self._open_output_widget(filename, content)
+        for file in files:
+            content = self.worker.read(passphrase, file)
+            self._open_output_widget(file, content)
 
     def _open_output_widget(self, name, content):
         widget = tk.Tk()

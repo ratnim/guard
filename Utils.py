@@ -24,3 +24,10 @@ def read(filename, path="", log_callback=None):
         log_callback("Read file: " + filePath)
     file = open(filePath, 'rb')
     return file.read()
+
+
+def get_file_entries(path):
+    entries = []
+    for filename in os.listdir(path):
+        entries.append(filename)
+    return entries
