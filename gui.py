@@ -2,8 +2,9 @@ import tkinter as tk
 
 
 class WorkingWidget:
+    """Basic working widget"""
 
-    def __init__(self, parent):
+    def __init__(self, parent, worker=None):
         self.frame = tk.Frame(parent)
         self.work_frame = tk.Frame(self.frame)
         self.work_frame.pack(side=tk.TOP)
@@ -14,6 +15,58 @@ class WorkingWidget:
         self.frame.destroy()
 
 
+class NewEntryWidget(WorkingWidget):
+    """Widget to create a new entry"""
+
+    def __init__(self, parent, worker):
+        super(NewEntryWidget, self).__init__(parent, worker)
+
+        self.entries = {}
+        self.row = 0
+        self.passphrase_hide = tk.IntVar()
+        self.passphrase_entry = None
+        self.worker = worker
+
+        self.passphrase_entry = self.generate_entry("Passphrase", False)
+        tk.Checkbutton(self.work_frame,
+                       text="Hide",
+                       variable=self.passphrase_hide,
+                       command=self.toggle_passphrase).grid(row=self.row, column=2)
+
+        self.generate_entry("Entry-Name")
+        self.generate_entry("Company")
+        self.generate_entry("Url")
+        self.generate_entry("E-Mail")
+        self.generate_entry("Login-Name")
+        self.generate_entry("Password")
+
+        tk.Button(self.button_frame, text='Save', width=25, command=self._save_pressed).pack(side=tk.LEFT)
+
+    def generate_entry(self, name, is_content=True):
+        tk.Label(self.work_frame, text=name).grid(row=self._next_row())
+        entry = tk.Entry(self.work_frame)
+        entry.grid(row=self.row, column=1)
+        if is_content:
+            self.entries[name] = entry
+        return entry
+
+    def _next_row(self):
+        self.row += 1
+        return self.row
+
+    def toggle_passphrase(self):
+        if self.passphrase_hide.get():
+            self.passphrase_entry.config(show="*")
+        else:
+            self.passphrase_entry.config(show="")
+
+    def _save_pressed(self):
+        values = {}
+        for entry in self.entries:
+            values[entry] = self.entries[entry].get()
+        self.worker.save(values, self.passphrase_entry.get())
+
+
 class MainWidget:
     """"Main GUI element"""
 
@@ -21,11 +74,6 @@ class MainWidget:
         self.tk_master = tk.Tk()
         self.tk_master.title("Guard")
         self.worker = worker
-        self.entries = {}
-        self.row = 0
-        self.passphrase = {}
-        self.passphrase_hide = tk.IntVar()
-        self.passphrase_entry = None
 
         self.frame = tk.Frame(self.tk_master)
         self.frame.pack()
@@ -54,36 +102,19 @@ class MainWidget:
         file_menu.add_command(label="New Entry", command=self._new_entry)
         file_menu.add_command(label="Open", command=self._open_entry)
 
-    def _reset_working_frame(self):
+    def _get_working_frame(self, widget_class=WorkingWidget, worker=None):
         if not self.working_widget is None:
             self.working_widget.destroy()
-        self.working_widget = WorkingWidget(self.frame)
+        self.working_widget = widget_class(self.frame, worker)
         self.working_widget.frame.pack(side=tk.TOP)
 
     def _new_entry(self):
         self.log_message("Open new entry.")
 
-        self._reset_working_frame()
-
-        self.passphrase_entry = self.generate_entry("Passphrase", False)
-        tk.Checkbutton(self.working_widget.button_frame,
-                       text="Hide",
-                       variable=self.passphrase_hide,
-                       command=self.toggle_passphrase).grid(row=self.row, column=2)
-
-        self.generate_entry("Entry-Name")
-        self.generate_entry("Company")
-        self.generate_entry("Url")
-        self.generate_entry("E-Mail")
-        self.generate_entry("Login-Name")
-        self.generate_entry("Password")
-
-        row = self.next_row()
-
-        tk.Button(self.working_widget.button_frame, text='Save', width=25, command=self._save_pressed).grid(row=row, column=1, sticky=tk.W, pady=4)
+        self._get_working_frame(NewEntryWidget, self.worker)
 
     def _open_entry(self):
-        self._reset_working_frame()
+        self._get_working_frame()
 
         tk.Button(self.working_widget.button_frame, text='Open', width=25, command=self._open_pressed).pack(side=tk.LEFT)
 
@@ -93,31 +124,6 @@ class MainWidget:
         self.log.insert(tk.END, message + "\r\n")
         self.log.configure(state="disabled")
         self.log.see(tk.END)
-
-    def toggle_passphrase(self):
-        if self.passphrase_hide.get():
-            self.passphrase_entry.config(show="*")
-        else:
-            self.passphrase_entry.config(show="")
-
-    def _save_pressed(self):
-        values = {}
-        for entry in self.entries:
-            values[entry] = self.entries[entry].get()
-        self.worker.save(values, self.passphrase_entry.get())
-
-    def generate_entry(self, name, is_content=True):
-        row = self.next_row()
-        tk.Label(self.working_widget.work_frame, text=name).grid(row=row)
-        entry = tk.Entry(self.working_widget.work_frame)
-        entry.grid(row=row, column=1)
-        if is_content:
-            self.entries[name] = entry
-        return entry
-
-    def next_row(self):
-        self.row += 1
-        return self.row
 
     def _open_pressed(self):
         filename = self.entries["Entry-Name"].get()
