@@ -1,14 +1,13 @@
 import sys
 from gui import MainWidget
 from encoder import Encoder
-from utils import write, read, get_file_entries
-
+from datastore import DataStore
 
 class Guard:
 
     def __init__(self):
-        self.data_directory = "data"
         self.gui = MainWidget(self)
+        self.data_store = DataStore("data", self.gui.log_message)
 
     @staticmethod
     def format(entries):
@@ -16,6 +15,12 @@ class Guard:
         for entry in entries:
             string += (entry + ':' + entries[entry] + '\n\r')
         return string
+
+    def entry_exists(self, file):
+        if file in self.data_store.get_entries():
+            self.gui.log_message("Entry " + file + " already exists.")
+            return True
+        return False
 
     def save(self, entries, passphrase):
         string = self.format(entries)
@@ -27,14 +32,14 @@ class Guard:
             self.gui.log_message("Passphrase need to be set")
             return
         cipher = Encoder.encode(passphrase, self.salt(), string)
-        write(cipher, filename, self.data_directory, self.gui.log_message)
+        self.data_store.write(cipher, filename)
 
     def read(self, passphrase, filename):
-        cipher = read(filename, self.data_directory, self.gui.log_message)
+        cipher = self.data_store.read(filename)
         return Encoder.decode(passphrase, self.salt(), cipher)
 
     def get_entries(self):
-        return get_file_entries(self.data_directory)
+        return self.data_store.get_entries()
 
     @staticmethod
     def salt():

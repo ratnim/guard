@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 
 
 class WorkingWidget:
@@ -68,8 +69,12 @@ class NewEntryWidget(WorkingWidget):
 
     def _save_pressed(self):
         values = {}
+        entry_name = self.entries["Entry-Name"].get()
         for entry in self.entries:
             values[entry] = self.entries[entry].get()
+        if self.worker.entry_exists(entry_name):
+            if not tk.messagebox.askokcancel("Overwrite", "Entry " + entry_name + " already exists. Overwrite?"):
+                return
         self.worker.save(values, self.passphrase_entry.get())
 
 
@@ -109,7 +114,6 @@ class OpenEntryWidget(WorkingWidget):
             if max_row + 1 <= row:
                 row = 1
                 column += 1
-
 
     def _open_pressed(self):
         files = self._selected_entries()
@@ -163,7 +167,7 @@ class MainWidget:
         self.tk_master.config(menu=menu)
         file_menu = tk.Menu(menu)
         menu.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="New Entry", command=self._new_entry)
+        file_menu.add_command(label="Add", command=self._new_entry)
         file_menu.add_command(label="Open", command=self._open_entry)
 
     def _get_working_frame(self, widget_class=WorkingWidget, worker=None):
