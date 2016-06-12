@@ -14,6 +14,22 @@ class WorkingWidget:
     def destroy(self):
         self.frame.destroy()
 
+    def _create_passphrase_entry(self, row):
+        self.passphrase_hide = tk.IntVar()
+        tk.Label(self.work_frame, text="Passphrase").grid(row=row)
+        self.passphrase_entry = tk.Entry(self.work_frame)
+        self.passphrase_entry.grid(row=row, column=1)
+        tk.Checkbutton(self.work_frame,
+                       text="Hide",
+                       variable=self.passphrase_hide,
+                       command=self._toggle_passphrase).grid(row=row, column=2)
+
+    def _toggle_passphrase(self):
+        if self.passphrase_hide.get():
+            self.passphrase_entry.config(show="*")
+        else:
+            self.passphrase_entry.config(show="")
+
 
 class NewEntryWidget(WorkingWidget):
     """Widget to create a new entry"""
@@ -21,17 +37,11 @@ class NewEntryWidget(WorkingWidget):
     def __init__(self, parent, worker):
         super(NewEntryWidget, self).__init__(parent, worker)
 
+        self.worker = worker
         self.entries = {}
         self.row = 0
-        self.passphrase_hide = tk.IntVar()
-        self.passphrase_entry = None
-        self.worker = worker
 
-        self.passphrase_entry = self.generate_entry("Passphrase", False)
-        tk.Checkbutton(self.work_frame,
-                       text="Hide",
-                       variable=self.passphrase_hide,
-                       command=self.toggle_passphrase).grid(row=self.row, column=2)
+        self._create_passphrase_entry(self._next_row())
 
         self.generate_entry("Entry-Name")
         self.generate_entry("Company")
@@ -54,18 +64,46 @@ class NewEntryWidget(WorkingWidget):
         self.row += 1
         return self.row
 
-    def toggle_passphrase(self):
-        if self.passphrase_hide.get():
-            self.passphrase_entry.config(show="*")
-        else:
-            self.passphrase_entry.config(show="")
-
     def _save_pressed(self):
         values = {}
         for entry in self.entries:
             values[entry] = self.entries[entry].get()
         self.worker.save(values, self.passphrase_entry.get())
 
+
+class OpenEntryWidget(WorkingWidget):
+    """Widget to create a new entry"""
+
+    def __init__(self, parent, worker):
+        super(OpenEntryWidget, self).__init__(parent, worker)
+
+        self.worker = worker
+        self._create_passphrase_entry(0)
+
+        tk.Button(self.button_frame, text='Open', width=25, command=self._open_pressed).pack(
+            side=tk.LEFT)
+
+    def _selected_entry(self):
+        return "Test"
+
+    def _open_pressed(self):
+        filename = self._selected_entry()
+        passphrase = self.passphrase_entry.get()
+        content = self.worker.read(passphrase, filename)
+        self._open_output_widget(filename, content)
+
+    def _open_output_widget(self, name, content):
+        widget = tk.Tk()
+        widget.title("Entry : " + name)
+        text = tk.Text(widget ,height=10, width=40)
+        scroll_bar = tk.Scrollbar(widget)
+        text.pack(side=tk.LEFT, fill=tk.Y)
+        scroll_bar.pack(side=tk.RIGHT, fill=tk.Y)
+        scroll_bar.config(command=text.yview)
+        text.config(yscrollcommand=scroll_bar.set)
+        text.insert(tk.END, content)
+        text.configure(bg=widget.cget('bg'), relief=tk.FLAT)
+        text.configure(state="disabled")
 
 class MainWidget:
     """"Main GUI element"""
@@ -109,14 +147,12 @@ class MainWidget:
         self.working_widget.frame.pack(side=tk.TOP)
 
     def _new_entry(self):
-        self.log_message("Open new entry.")
-
+        self.log_message("Select new entry widget.")
         self._get_working_frame(NewEntryWidget, self.worker)
 
     def _open_entry(self):
-        self._get_working_frame()
-
-        tk.Button(self.working_widget.button_frame, text='Open', width=25, command=self._open_pressed).pack(side=tk.LEFT)
+        self.log_message("Select open entry widget.")
+        self._get_working_frame(OpenEntryWidget, self.worker)
 
     def log_message(self, message):
         print(message)
@@ -124,22 +160,6 @@ class MainWidget:
         self.log.insert(tk.END, message + "\r\n")
         self.log.configure(state="disabled")
         self.log.see(tk.END)
-
-    def _open_pressed(self):
-        filename = self.entries["Entry-Name"].get()
-        passphrase = self.passphrase_entry.get()
-        widget = tk.Tk()
-        widget.title("Entry : " + filename)
-        content = self.worker.read(passphrase, filename)
-        text = tk.Text(widget ,height=10, width=40)
-        scroll_bar = tk.Scrollbar(widget)
-        text.pack(side=tk.LEFT, fill=tk.Y)
-        scroll_bar.pack(side=tk.RIGHT, fill=tk.Y)
-        scroll_bar.config(command=text.yview)
-        text.config(yscrollcommand=scroll_bar.set)
-        text.insert(tk.END, content)
-        text.configure(bg=widget.cget('bg'), relief=tk.FLAT)
-        text.configure(state="disabled")
 
     def run(self):
         tk.mainloop()
