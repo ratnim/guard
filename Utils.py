@@ -14,7 +14,6 @@ def write(content,filename, path="", log_callback=None):
         os.makedirs(path)
     if not log_callback == None:
         log_callback("Write file: " + filePath)
-    print("Write file: " + filePath)
     file = open( filePath, 'wb')
     file.write(content)
 
@@ -23,6 +22,5 @@ def read(filename, path="", log_callback=None):
     filePath = os.path.sep.join([path, filename])
     if not log_callback == None:
         log_callback("Read file: " + filePath)
-    print("Read file: " + filePath)
     file = open(filePath, 'rb')
     return file.read()

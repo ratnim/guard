@@ -3,15 +3,15 @@ from gui import MainWidget
 from encoder import Encoder
 from utils import write, read
 
+
 class Guard:
-    data_directory = "data"
-    gui = None
 
     def __init__(self):
-        if len(sys.argv) == 1:
-            self.open_gui();
+        self.data_directory = "data"
+        self.gui = MainWidget(self)
 
-    def format(self, entries):
+    @staticmethod
+    def format(entries):
         string = ""
         for entry in entries:
             string += (entry + ':' + entries[entry] + '\n\r')
@@ -21,10 +21,10 @@ class Guard:
         string = self.format(entries)
         filename = entries["Entry-Name"]
         if filename == "":
-            print("Entry-Name need to be set")
+            self.gui.log_message("Entry-Name need to be set")
             return
         if passphrase == "":
-            print("Passphrase need to be set")
+            self.gui.log_message("Passphrase need to be set")
             return
         cipher = Encoder.encode(passphrase, self.salt(), string)
         write(cipher, filename, self.data_directory, self.gui.log_message)
@@ -33,11 +33,9 @@ class Guard:
         cipher = read(filename, self.data_directory, self.gui.log_message)
         return Encoder.decode(passphrase, self.salt(), cipher)
 
-    def open_gui(self):
-        self.gui = MainWidget(self.save, self.read)
-        self.gui.open()
-
-    def salt(self):
+    @staticmethod
+    def salt():
         return 'thisIsMadness'
 
-Guard()
+guard = Guard()
+guard.gui.run()

@@ -1,24 +1,72 @@
 import tkinter as tk
 
 
+class WorkingWidget:
+
+    def __init__(self, parent):
+        self.frame = tk.Frame(parent)
+        self.work_frame = tk.Frame(self.frame)
+        self.work_frame.pack(side=tk.TOP)
+        self.button_frame = tk.Frame(self.frame)
+        self.button_frame.pack(side=tk.BOTTOM)
+
+    def destroy(self):
+        self.frame.destroy()
+
+
 class MainWidget:
     """"Main GUI element"""
 
-    def __init__(self, save, read):
+    def __init__(self, worker):
         self.tk_master = tk.Tk()
         self.tk_master.title("Guard")
-        self.save_callback = save
-        self.read_callback = read
+        self.worker = worker
         self.entries = {}
         self.row = 0
         self.passphrase = {}
         self.passphrase_hide = tk.IntVar()
         self.passphrase_entry = None
-        self.log = None
 
-    def open(self):
+        self.frame = tk.Frame(self.tk_master)
+        self.frame.pack()
+
+        self.working_widget = None
+
+        self.log_frame = tk.Frame(self.frame)
+        self.log_frame.pack(side=tk.BOTTOM)
+
+        self._setup_log()
+        self._setup_menu()
+
+    def _setup_log(self):
+        self.log = tk.Text(self.log_frame, width=60, height=4)
+        self.log.configure(bg=self.log_frame.cget('bg'))
+        self.log.config(bg="sky blue")
+        self.log.configure(state="disabled")
+        self.log.grid(row=0, column=0, rowspan=4, columnspan=3)
+        self.log_message("Guard, Version 1.0")
+
+    def _setup_menu(self):
+        menu = tk.Menu(self.frame)
+        self.tk_master.config(menu=menu)
+        file_menu = tk.Menu(menu)
+        menu.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label="New Entry", command=self._new_entry)
+        file_menu.add_command(label="Open", command=self._open_entry)
+
+    def _reset_working_frame(self):
+        if not self.working_widget is None:
+            self.working_widget.destroy()
+        self.working_widget = WorkingWidget(self.frame)
+        self.working_widget.frame.pack(side=tk.TOP)
+
+    def _new_entry(self):
+        self.log_message("Open new entry.")
+
+        self._reset_working_frame()
+
         self.passphrase_entry = self.generate_entry("Passphrase", False)
-        tk.Checkbutton(self.tk_master,
+        tk.Checkbutton(self.working_widget.button_frame,
                        text="Hide",
                        variable=self.passphrase_hide,
                        command=self.toggle_passphrase).grid(row=self.row, column=2)
@@ -32,20 +80,12 @@ class MainWidget:
 
         row = self.next_row()
 
-        tk.Button(self.tk_master, text='Close', width=25, command=self.tk_master.destroy).grid(row=row, column=0, sticky=tk.W, pady=4)
-        tk.Button(self.tk_master, text='Save', width=25, command=self.save_pressed).grid(row=row, column=1, sticky=tk.W, pady=4)
-        tk.Button(self.tk_master, text='Open', width=25, command=self.open_pressed).grid(row=row, column=2, sticky=tk.W, pady=4)
+        tk.Button(self.working_widget.button_frame, text='Save', width=25, command=self._save_pressed).grid(row=row, column=1, sticky=tk.W, pady=4)
 
-        self.log = tk.Text(self.tk_master, width=60, height=4)
-        self.log.configure(bg=self.tk_master.cget('bg'))
-        self.log.config(bg="sky blue")
-        self.log.configure(state="disabled")
-        self.log.grid(row=self.next_row(), column=0, rowspan=4, columnspan=3)
-        self.row += 4
-        self.log_message("Guard, Version 1.0")
+    def _open_entry(self):
+        self._reset_working_frame()
 
-
-        tk.mainloop()
+        tk.Button(self.working_widget.button_frame, text='Open', width=25, command=self._open_pressed).pack(side=tk.LEFT)
 
     def log_message(self, message):
         print(message)
@@ -60,17 +100,16 @@ class MainWidget:
         else:
             self.passphrase_entry.config(show="")
 
-    def save_pressed(self):
+    def _save_pressed(self):
         values = {}
-
         for entry in self.entries:
             values[entry] = self.entries[entry].get()
-        self.save_callback(values, self.passphrase_entry.get())
+        self.worker.save(values, self.passphrase_entry.get())
 
     def generate_entry(self, name, is_content=True):
         row = self.next_row()
-        tk.Label(self.tk_master, text=name).grid(row=row)
-        entry = tk.Entry(self.tk_master)
+        tk.Label(self.working_widget.work_frame, text=name).grid(row=row)
+        entry = tk.Entry(self.working_widget.work_frame)
         entry.grid(row=row, column=1)
         if is_content:
             self.entries[name] = entry
@@ -80,12 +119,12 @@ class MainWidget:
         self.row += 1
         return self.row
 
-    def open_pressed(self):
+    def _open_pressed(self):
         filename = self.entries["Entry-Name"].get()
         passphrase = self.passphrase_entry.get()
         widget = tk.Tk()
         widget.title("Entry : " + filename)
-        content = self.read_callback(passphrase, filename)
+        content = self.worker.read(passphrase, filename)
         text = tk.Text(widget ,height=10, width=40)
         scroll_bar = tk.Scrollbar(widget)
         text.pack(side=tk.LEFT, fill=tk.Y)
@@ -95,3 +134,6 @@ class MainWidget:
         text.insert(tk.END, content)
         text.configure(bg=widget.cget('bg'), relief=tk.FLAT)
         text.configure(state="disabled")
+
+    def run(self):
+        tk.mainloop()
